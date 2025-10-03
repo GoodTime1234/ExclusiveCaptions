@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exclusive Caption Reader</title>
+</head>
+<body>
+
+  <h1>Exclusive Caption Reader</h1>
+
+  <div id="exclusiveContent" style="display:none;">
+    <h2>Exclusive Comic for Gold Patrons!</h2>
+    <img src="exclusive_comic_page_1.jpg" alt="Exclusive Comic" />
+  </div>
+
+  <div id="message"></div>
+
+  <script>
+    // Check if user is logged in and a Gold Patron
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (accessToken) {
+      // Fetch user info using the stored access token
+      fetch('https://www.patreon.com/api/oauth2/v2/identity', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      .then(response => response.json())
+      .then(userData => {
+        const tier = userData.data.relationships.patron_tiers.data[0]?.attributes.name;
+        console.log('User Tier:', tier);
+
+        if (tier === 'Gold') {
+          // Show exclusive content if the user is a Gold Patron
+          document.getElementById('exclusiveContent').style.display = 'block';
+          document.getElementById('message').textContent = 'Enjoy your exclusive comic, Gold Patron!';
+        } else {
+          document.getElementById('message').textContent = 'You need to be a Gold Patron to view exclusive content.';
+        }
+      });
+    } else {
+      document.getElementById('message').textContent = 'You are not logged in. Please login to access exclusive content.';
+    }
+  </script>
+
+</body>
+</html>
