@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Callback</title>
+</head>
+<body>
+
+  <h1>Processing Login...</h1>
+  <div id="message"></div>
+
+  <script>
+    // Step 2: Handle the OAuth callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');  // Extract the authorization code from URL
+
+    if (authCode) {
+      // Exchange the authorization code for an access token
+      const clientId = 'Hhn0u-dGkxJ8WKqxGvsRVIqKvKGJbrJOj-YPGfa0DkV_RGjtgXv-6VgUH_FDGrl4';
+      const clientSecret = 'IRPod8tagXgB8_PiRbhKHhGwOHhJlt7rgQHaY47d-Pjqwt1GBd7pzabRkeZTAFIz';
+      const redirectUri = 'https://goodtime1234.github.io/ExclusiveCaptions/oauth/callback';  // Same callback URI
+
+      fetch('https://www.patreon.com/api/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: authCode,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        const accessToken = data.access_token;  // Access token
+
+        // Fetch user info from Patreon using the access token
+        fetch('https://www.patreon.com/api/oauth2/v2/identity', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        })
+        .then(response => response.json())
+        .then(userData => {
+          console.log('User Data:', userData);
+
+          // Check user tier (patron level)
+          const tier = userData.data.relationships.patron_tiers.data[0]?.attributes.name;
+
+          // Show content based on tier
+          if (tier === 'Gold') {
+            document.getElementById('message').textContent = 'Welcome, Gold Patron!';
+            localStorage.setItem('accessToken', accessToken);  // Store token in localStorage for session use
+            window.location.href = '/ExclusiveCaptions';  // Redirect to main page
+          } else {
+            document.getElementById('message').textContent = 'You need to be a Gold Patron to access exclusive content.';
+          }
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
